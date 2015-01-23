@@ -5,9 +5,10 @@
  1) README.md: Description of the purpose and contents of this
 repository.
  2) run_analysis.R: This is the script to 
-a) download and unzip the datafile if necesary.
-b) It will place the dataset in the working directory
-c) in a folder with the name which was in the downladed file.
+  a) download and unzip the datafile if necesary.
+  b) It will place the dataset in the working directory
+  c) in a folder with the name which was in the downladed file.
+
 
   3) tidy_data_set.txt: This is a comma delimeted file created by the program run_analysis.R. 
 
