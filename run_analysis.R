@@ -6,14 +6,40 @@
 ########################################################
 ########################################################
 #    Input data sets:
-# 1) features.txt:
-# 2) activity_labels.txt: Currently used to change factors
-# 3) subject_train.txt:
-# 4) x_train.txt:
-# 5) y_train.txt:
-# 6) subject_test.txt:
-# 7) x_test.txt:
-# 8) y_test.txt:
+# 1) features.txt:    file=features.txt
+# 2) activity_labels: file=activity_labels.txt
+# 3) subject_train:   file=subject_train.txt
+# 4) x_train:         file=x_train.txt
+# 5) y_train:         file=y_train.txt
+# 6) subject_test:    file=subject_test
+# 7) x_test:          file=x_test.txt
+# 8) y_test:          file=y_test.txt
+#
+#   Intermedate data sets:
+# 1) sub_x_train: Sub Set of x_train retaining
+#                 only variable with mean and std.
+# 2) sub_x_test:  Sub Set of x_test retaining
+#                 only variable with mean and std.
+# 3) data_train:  This is the combined data sets for
+#                 the training set, where the testor,
+#                 activity, and feature variables are
+#                 all columns in the dataset
+# 4) data_test:   This is the combined data sets for
+#                 the training set, where the testor,
+#                 activity, and feature variables are
+#                 all columns in the dataset
+# 5) data:        This is the combined (appended)
+#                 data sets of data_train and data_test.
+# 6) tbl_data:    The data set data has been tranformed
+#                 into a table to use the dplyr package
+#                 on it.
+# 7) g_data:      This table is the result of grouping
+#                 the tbl_data set by testor and activity.
+# 8) df_columns_to_keep: Used to write out columns names for
+#                  documenting in the code book.
+#
+#   Output data set:
+# 1) tidy_data_set.txt
 ########################################################
 
 rm(list=ls())   # uncomment if need to clear workspace
@@ -27,14 +53,14 @@ library(stringr)
 # I am not actually using it, because I do not have a mac
 # to test it on.
 #############################################################
-env <- as.data.frame(Sys.getenv()
+env <- as.data.frame(Sys.getenv())
     
 #############################################################
 # Down load the file.
 #############################################################
-dataDir <- "./data"
+dataDir  <- "./data"
 fileName <- paste0(dataDir, "/Dataset.zip")
-fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+fileUrl  <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
 if(!file.exists(dataDir)){dir.create(dataDir)}
 if(!file.exists(fileName)){
     download.file(fileUrl,destfile=fileName, mode="wb")
@@ -71,6 +97,8 @@ f_remove_char <- function(z,string){ gsub(string,"",z)}
 #     uses f_remove_char on the atomic vector z to remove
 #     (, ) , whitespace, underscore, hyphen, leading 
 #     and trailing spaces. And lowercase the strings.
+#   I commented out the tolower becuase everyone seems to 
+#     prefer camelcode
 ################################################################
 f_remove_chars <- function(z) {
     z <- f_remove_char(z,"\\(") 
@@ -78,7 +106,8 @@ f_remove_chars <- function(z) {
     z <- f_remove_char(z,",")
     z <- f_remove_char(z," +")
     z <- f_remove_char(z,"-")
-    z <- tolower(z)
+    z <- f_remove_char(z,"_")
+#   z <- tolower(z)
     z <- str_trim(z)
 } 
 
@@ -102,8 +131,11 @@ f_unique_vectors <- function(x,y) {
 # Read in the activity labels and examine them. These will be   #
 #  used to change the levels in the y_train and y_test datasets # 
 #################################################################
-activity_labels  <- read.csv("./UCI HAR Dataset/activity_labels.txt", sep=" ", header=FALSE)
-names(activity_labels) <- c("activity", "activity_type")
+activity_labels  <- read.csv("./UCI HAR Dataset/activity_labels.txt"
+                              ,sep=" "
+                              ,header=FALSE
+                            )
+names(activity_labels) <- c("Record", "ActivityType")
 print("listing activty labels file for review =>")
 print(head( activity_labels))
 
@@ -111,25 +143,48 @@ print(head( activity_labels))
 # Read in the activty file (y_train). Then change the factor names
 #   in the dataset to the activity labels from the activity label file.
 #####################################################################
-y_train          <- read.csv ("./UCI HAR Dataset/train/y_train.txt", sep=" ", header=FALSE)
-names(y_train) <- c("activity")
+y_train <- read.csv ("./UCI HAR Dataset/train/y_train.txt"
+                      ,sep=" "
+                      ,header=FALSE
+                    )
+names(y_train) <- c("Activity")
 # Number of levels for factor is ==> nlevels(y_train$activity)
-y_train$activity <- factor(y_train$activity, levels=activity_labels$activity, labels=activity_labels$activity_type)
+y_train$Activity <- factor(y_train$Activity
+                          ,levels=activity_labels$Record
+                          ,labels=activity_labels$ActivityType)
 
 
 ####################################################################
 # Read in the features and condition all of the feature names.        
-#   Then  get a list of columns that we want to keep to be used later.    
+# Since CamelCode seem to be preferred, prepare by changing
+# mean to Mean and std to Std, gravity to Gravity for easier reading.
+# Then create a list of columns that we want to use later,
 #####################################################################
-features         <- read.csv("./UCI HAR Dataset/features.txt", sep=" ", header=FALSE)
+features <- read.csv("./UCI HAR Dataset/features.txt"
+                      ,sep=" "
+                      ,header=FALSE
+                    )
 features$V2 <- f_remove_chars(features$V2)
+# Since CamelCode seem to be preferred, prepare by changing
+#   mean to Mean and std to Std for easier reading.
+features$V2 <- gsub("mean", "Mean",features$V2 )
+features$V2 <- gsub("std", "Std",features$V2 )
+features$V2 <- gsub("gravity", "Gravity",features$V2 )
 columns_to_keep <- grep("[mM]ean|[sS]td", features$V2, value=TRUE)
+df_columns_to_keep <- as.data.frame(columns_to_keep)
+write.table(df_columns_to_keep
+             ,file="./df_columns_to_keep.txt"
+             ,row.names=FALSE
+            )
 
 ####################################################################
 # Read in the subject list (subject_train).
 #####################################################################
-subject_train    <- read.csv ("./UCI HAR Dataset/train/subject_train.txt", sep=" ", header=FALSE)
-names(subject_train) <- c("testor")
+subject_train <- read.csv ("./UCI HAR Dataset/train/subject_train.txt"
+                            ,sep=" "
+                            ,header=FALSE
+                          )
+names(subject_train) <- c("Tester")
 
 ####################################################################
 # Read in the training data (x_train) Note using read.table because
@@ -144,30 +199,35 @@ x_train <- read.table("./UCI HAR Dataset/train/X_train.txt"
                        ,col.names=features$V2
                      )
 
-x_train <- x_train[,columns_to_keep]
+sub_x_train <- x_train[,columns_to_keep]
    
 
 ###########################################################
 # Column Bind the data sets (subject_train, y_train, and 
-#    x_train together.
+#    sub_x_train together.
 ###########################################################
-data_train <- cbind(subject_train, y_train, x_train[,1:length(x_train)])
+data_train <- cbind(subject_train, y_train, sub_x_train[,1:length(sub_x_train)])
 
 
 ####################################################################
 # Read in the subject list (subject_test).
 #####################################################################
-subject_test    <- read.csv ("./UCI HAR Dataset/test/subject_test.txt", sep=" ", header=FALSE)
-names(subject_test) <- c("testor")
+subject_test <- read.csv ("./UCI HAR Dataset/test/subject_test.txt"
+                          ,sep=" "
+                          ,header=FALSE
+                         )
+names(subject_test) <- c("Tester")
 
 ####################################################################
 # Read in the activty file (y_test). Then change the factor names
 #   in the dataset to the activity labels from the activity label file.
 #####################################################################
-y_test          <- read.csv ("./UCI HAR Dataset/test/y_test.txt", sep=" ", header=FALSE)
-names(y_test) <- c("activity")
+y_test <- read.csv ("./UCI HAR Dataset/test/y_test.txt"
+                     ,sep=" "
+                     ,header=FALSE)
+names(y_test) <- c("Activity")
 # Number of levels for factor is ==> nlevels(y_test$activity)
-y_test$activity <- factor(y_test$activity, levels=activity_labels$activity, labels=activity_labels$activity_type)
+y_test$Activity <- factor(y_test$Activity, levels=activity_labels$Record, labels=activity_labels$ActivityType)
 
 ####################################################################
 # Read in the testing data (x_test) Note using read.table because
@@ -181,13 +241,13 @@ x_test <- read.table("./UCI HAR Dataset/test/X_test.txt"
                        , na.strings="NA"
                        ,col.names=features$V2
                      )
-x_test <- x_test[,columns_to_keep]
+sub_x_test <- x_test[,columns_to_keep]
 
 ###########################################################
 # Column Bind the data sets (subject_test, y_test, and 
-#    x_test together.
+#    sub_x_test together.
 ###########################################################
-data_test <- cbind(subject_test, y_test, x_test[,1:length(x_test)])
+data_test <- cbind(subject_test, y_test, sub_x_test[,1:length(sub_x_test)])
 
 
 ############################################################
@@ -198,7 +258,7 @@ data_test <- cbind(subject_test, y_test, x_test[,1:length(x_test)])
 #    are different test subjects in each data set.
 #####################################################################
 print ("testing subject data sets for duplicates ==> ")
-  f_unique_vectors(subject_train$testor, subject_test$testor)
+  f_unique_vectors(subject_train$Tester, subject_test$Tester)
   
 
 #######################################################################
@@ -211,7 +271,7 @@ data <- rbind(data_train, data_test)
 ######################################################################
 tbl_data <- tbl_df(data)
 
-g_data <- group_by(tbl_data, testor, activity)
+g_data <- group_by(tbl_data, Tester, Activity)
 
 out_data <- summarise_each(g_data, funs(mean))
 
