@@ -170,6 +170,7 @@ features$V2 <- f_remove_chars(features$V2)
 features$V2 <- gsub("mean", "Mean",features$V2 )
 features$V2 <- gsub("std", "Std",features$V2 )
 features$V2 <- gsub("gravity", "Gravity",features$V2 )
+features$V2 <- gsub("angle", "Angle",features$V2 )
 columns_to_keep <- grep("[mM]ean|[sS]td", features$V2, value=TRUE)
 df_columns_to_keep <- as.data.frame(columns_to_keep)
 write.table(df_columns_to_keep
