@@ -1,7 +1,9 @@
 # Repository Name: TitdyDataSet_Assignment2
 # Purpose: Coursera Course Project: Getting and Cleaning Data.
 # This repository is for demonstrating the ability to clean a data set.
-#    Contents of the Repository.
+#    Contents of the Repository. The output (the tidy data set contains the
+        mean value for each input variable that was a mean or standard
+        deviation in the original dataset.
  1) README.md: Description of the purpose and contents of this
 repository. I added a description of the funtions that I used at the end of
 this document and also in the codebook.
