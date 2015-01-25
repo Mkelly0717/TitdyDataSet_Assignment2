@@ -3,7 +3,8 @@
 # This repository is for demonstrating the ability to clean a data set.
 #    Contents of the Repository.
  1) README.md: Description of the purpose and contents of this
-repository.
+repository. I added a description of the funtions that I used at the end of
+this document and also in the codebook.
  2) run_analysis.R: This is the script to 
   a) download and unzip the datafile if necesary.
   b) It will place the dataset in the working directory
@@ -87,4 +88,10 @@ b.	Use group_by to group the table by tester and activity. The output dataset is
 c.	Use summarise_each to apply the mean to the non grouped columns. The output dataset is the final dataset out_data. The final dataset has 180 observations of 88 variables.
 21.	Write out out_data to the tidy data set file tidy_data_set.txt.
 The final data set has is of the form:
+Functions
+Below are the functions which are used in the scripts run_analysie.R
+1. f_is_unique(z): This function accepts an atomic vector z as its parameter. It will return TRUE if all elements of the vector are unique. It will return false if they are not. It prints a message to let you know the result.
+2. f_remove_char(z,string): This function uses gsub to remove all instances of “string” from atomic vector z.
+3. f_remove_chars(z): pass an atomic vector z. This function usesthe function f_remove_char on the atomic vector z to remove the following characters from it ? “(“ , “)” , comma, whitespace, underscore, hyphen, leading and trailing spaces. It used to lowercase the strings but I commented that out because everyone in the forums seems to prefer camel code.
+4. f_unique_vectors(x,y): This function takes two vectors of and concatenates them. Then it checks to make sure that there are no duplicated values. This is used t ensure that the subjects between the two datasets did not re-used the numbers for the tester that were used in the first dataset “y_train” in the second dataset ÿ_test”.
 
